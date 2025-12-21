@@ -1,5 +1,5 @@
 
-import { TREE_HEIGHT, TREE_RADIUS, SCATTER_RADIUS } from '../constants';
+import { TREE_HEIGHT, TREE_RADIUS } from '../constants';
 
 export const getRandomPointInSphere = (radius: number): [number, number, number] => {
   const u = Math.random();
@@ -8,7 +8,7 @@ export const getRandomPointInSphere = (radius: number): [number, number, number]
   const phi = Math.acos(2 * v - 1);
   const r = radius * Math.pow(Math.random(), 1 / 3);
   const x = r * Math.sin(phi) * Math.cos(theta);
-  const y = r * Math.sin(phi) * Math.sin(theta) + 5; // Center slightly elevated
+  const y = r * Math.sin(phi) * Math.sin(theta) + 5;
   const z = r * Math.cos(phi);
   return [x, y, z];
 };
@@ -23,25 +23,22 @@ export const getTreeConePosition = (): [number, number, number] => {
   return [x, y, z];
 };
 
-export const getSpiralPosition = (t: number, height: number): [number, number, number] => {
-  const angle = t * Math.PI * 4;
-  const r = (1 - t / height) * TREE_RADIUS;
-  return [
-    r * Math.cos(angle),
-    t,
-    r * Math.sin(angle)
-  ];
-};
-
+// 照片在散开状态下围绕中心五角星呈丝带状排布
 export const getPhotoRibbonPosition = (index: number, total: number): [number, number, number] => {
-  const height = 10;
   const t = index / total;
-  const angle = t * Math.PI * 6; // Spiral turns
-  const radius = 6;
-  const y = (t - 0.5) * height + 5; // Centered around Y=5
+  const angle = t * Math.PI * 4; // 绕两圈
+  const radius = 8; // 离中心五角星的距离
+  const y = (t - 0.5) * 8 + 5; // 在中心点上下波动
   return [
     radius * Math.cos(angle),
     y,
     radius * Math.sin(angle)
   ];
+};
+
+// 获取地面散落点
+export const getGroundScatterPoint = (radius: number): [number, number, number] => {
+  const angle = Math.random() * Math.PI * 2;
+  const r = Math.random() * radius + 5;
+  return [Math.cos(angle) * r, 0.1, Math.sin(angle) * r];
 };

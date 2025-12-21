@@ -1,6 +1,6 @@
 
-import React, { useRef } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
+import React, { useRef, useState, useEffect } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Text, Float } from '@react-three/drei';
 import { TreeMorphState } from '../types';
@@ -15,11 +15,21 @@ interface PolaroidProps {
 
 const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphState, index }) => {
   const meshRef = useRef<THREE.Group>(null);
-  
-  // Explicitly setting crossOrigin to 'anonymous' to avoid CORS issues with external images
-  const texture = useLoader(THREE.TextureLoader, url, (loader) => {
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
     loader.setCrossOrigin('anonymous');
-  });
+    loader.load(
+      url,
+      (tex) => {
+        tex.minFilter = THREE.LinearFilter;
+        setTexture(tex);
+      },
+      undefined,
+      (err) => console.error("Texture load failed:", url, err)
+    );
+  }, [url]);
 
   useFrame((state) => {
     if (!meshRef.current) return;
@@ -28,40 +38,47 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
       ? new THREE.Vector3(...scatterPos) 
       : new THREE.Vector3(...treePos);
     
-    meshRef.current.position.lerp(targetPos, 0.05);
+    meshRef.current.position.lerp(targetPos, 0.08);
 
-    // Look at camera in scattered mode, look outwards in tree mode
     if (morphState === TreeMorphState.SCATTERED) {
       meshRef.current.lookAt(state.camera.position);
     } else {
+      // 在树形态下，照片向外侧稍微倾斜
       const normal = new THREE.Vector3().copy(meshRef.current.position).normalize();
-      normal.y = 0; // Keep it upright-ish
+      normal.y = 0;
       const lookAtTarget = new THREE.Vector3().addVectors(meshRef.current.position, normal);
       meshRef.current.lookAt(lookAtTarget);
     }
   });
 
   return (
-    <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
+    <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
       <group ref={meshRef} name={`photo-${index}`}>
-        {/* White Polaroid Frame */}
+        {/* 拍立得相框 */}
         <mesh position={[0, 0, -0.01]}>
-          <planeGeometry args={[1.2, 1.5]} />
-          <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.2} />
+          <planeGeometry args={[1.3, 1.6]} />
+          <meshStandardMaterial color="#ffffff" metalness={0} roughness={1} />
         </mesh>
-        {/* Photo Area */}
+        
+        {/* 照片主体 */}
         <mesh position={[0, 0.15, 0]}>
-          <planeGeometry args={[1.0, 1.0]} />
-          <meshBasicMaterial map={texture} transparent={true} />
+          <planeGeometry args={[1.15, 1.15]} />
+          {texture ? (
+            <meshBasicMaterial map={texture} transparent={true} />
+          ) : (
+            <meshStandardMaterial color="#f0f0f0" />
+          )}
         </mesh>
-        {/* Signature Area */}
+
+        {/* 使用系统默认字体防止网络加载挂起导致黑屏 */}
         <Text
-          position={[0, -0.55, 0.01]}
+          position={[0, -0.58, 0.01]}
           fontSize={0.08}
-          color="#333"
-          font="https://fonts.gstatic.com/s/sacramento/v15/buE4poG65_v9tsuPhyRXL_WzS24.woff"
+          color="#222"
+          anchorX="center"
+          anchorY="middle"
         >
-          Christmas 2024
+          Signature '24
         </Text>
       </group>
     </Float>
