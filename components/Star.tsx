@@ -20,7 +20,6 @@ const Star: React.FC<StarProps> = ({ morphState }) => {
 
     for (let i = 0; i < points * 2; i++) {
       const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      // i=0 is the top point at PI/2 (90 degrees)
       const angle = (i / (points * 2)) * Math.PI * 2 + Math.PI / 2;
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
@@ -50,10 +49,10 @@ const Star: React.FC<StarProps> = ({ morphState }) => {
     // Standard rotation
     meshRef.current.rotation.y += 0.01;
 
-    // If scattered, keep upright posture (one point up) but with slight breathing motion
+    // If scattered, keep upright posture but with subtle breathing motion
     if (morphState === TreeMorphState.SCATTERED) {
-      meshRef.current.position.y += Math.sin(state.clock.elapsedTime * 1.5) * 0.15;
-      // Ensure it stays upright (rotation.z near 0)
+      // 降低振幅由 0.15 变为 0.05，保持稳定感
+      meshRef.current.position.y += Math.sin(state.clock.elapsedTime * 1.5) * 0.05;
       meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);
     } else {
       meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);

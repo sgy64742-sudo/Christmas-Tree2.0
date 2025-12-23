@@ -4,7 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import Experience from './components/Experience';
 import LoadingScreen from './components/LoadingScreen';
 import { TreeMorphState, PhotoData } from './types';
-import { Play, Pause, RefreshCw, Upload, Hand, CheckCircle2, Loader2, Music } from 'lucide-react';
+import { Play, Pause, RefreshCw, Upload, Hand, Music } from 'lucide-react';
 import { useHandGestures, Gesture } from './hooks/useHandGestures';
 
 const INITIAL_PHOTOS: PhotoData[] = [
@@ -21,22 +21,30 @@ const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [handData, setHandData] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const { isActive: cameraActive } = useHandGestures((data) => {
     setHandData(data);
-    if (data.gesture === Gesture.FIST && morphState !== TreeMorphState.TREE_SHAPE) {
-      setMorphState(TreeMorphState.TREE_SHAPE);
-    } else if (data.gesture === Gesture.OPEN && morphState !== TreeMorphState.SCATTERED) {
-      setMorphState(TreeMorphState.SCATTERED);
-    }
+    
+    setMorphState(current => {
+      if (data.gesture === Gesture.FIST && current !== TreeMorphState.TREE_SHAPE) {
+        return TreeMorphState.TREE_SHAPE;
+      } 
+      if (data.gesture === Gesture.OPEN && current !== TreeMorphState.SCATTERED) {
+        return TreeMorphState.SCATTERED;
+      }
+      return current;
+    });
   });
 
   const onExperienceStart = () => {
     if (audioRef.current) {
       audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.log("Auto-play prevented", e));
     }
+    
+    setTimeout(() => {
+      setMorphState(TreeMorphState.TREE_SHAPE);
+    }, 1200);
   };
 
   const toggleMorph = () => {
@@ -58,8 +66,6 @@ const App: React.FC = () => {
       setTimeout(() => {
         setPhotos(prev => [...prev, { id: Date.now().toString(), url }]);
         setIsUploading(false);
-        setUploadSuccess(true);
-        setTimeout(() => setUploadSuccess(false), 3000);
       }, 800);
     }
   };
@@ -68,7 +74,7 @@ const App: React.FC = () => {
     <div className="relative w-full h-screen bg-black text-white overflow-hidden">
       <LoadingScreen onStart={onExperienceStart} />
 
-      <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 8, 32], fov: 40 }}>
+      <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 6, 24], fov: 45 }}>
         <Suspense fallback={null}>
           <Experience morphState={morphState} photos={photos} handData={handData} />
         </Suspense>

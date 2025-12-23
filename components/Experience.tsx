@@ -8,9 +8,10 @@ import Ornaments from './Ornaments';
 import Background from './Background';
 import Polaroid from './Polaroid';
 import Star from './Star';
-import { getPhotoRibbonPosition, getTreeConePosition } from '../utils/math';
-import { useFrame, useThree } from '@react-three/fiber';
+import { getPhotoRibbonPosition, getTreePhotoPosition } from '../utils/math';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { COLORS } from '../constants';
 
 interface ExperienceProps {
   morphState: TreeMorphState;
@@ -20,25 +21,30 @@ interface ExperienceProps {
 
 const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData }) => {
   const controlsRef = useRef<any>(null);
+  const trunkRef = useRef<THREE.Mesh>(null);
 
-  // Memoize photo positions to prevent twitching when hand data updates
   const photoPositions = useMemo(() => {
     return photos.map((_, i) => {
-      const treePos = getTreeConePosition();
       return {
         scatter: getPhotoRibbonPosition(i, photos.length),
-        // Slightly offset from tree surface to be visible
-        tree: [treePos[0] * 1.4, treePos[1], treePos[2] * 1.4] as [number, number, number]
+        tree: getTreePhotoPosition(i, photos.length)
       };
     });
-  }, [photos.length]); // Only re-calculate if photo count changes
+  }, [photos.length]);
 
-  useFrame(() => {
+  useFrame((state) => {
     if (!controlsRef.current) return;
     
-    // Smoothly focus on the center of interest
-    const targetY = morphState === TreeMorphState.SCATTERED ? 5 : 5;
+    // Smooth camera target
+    const targetY = morphState === TreeMorphState.TREE_SHAPE ? 4.5 : 5.0;
     controlsRef.current.target.lerp(new THREE.Vector3(0, targetY, 0), 0.05);
+
+    if (trunkRef.current) {
+      const targetScaleY = morphState === TreeMorphState.TREE_SHAPE ? 1.0 : 0.001;
+      trunkRef.current.scale.y = THREE.MathUtils.lerp(trunkRef.current.scale.y, targetScaleY, 0.05);
+      // Keep it visible once it starts growing
+      trunkRef.current.visible = trunkRef.current.scale.y > 0.005;
+    }
 
     if (handData && handData.gesture === 'OPEN') {
       const rotY = (handData.x - 0.5) * Math.PI;
@@ -48,12 +54,12 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
 
   return (
     <>
-      <PerspectiveCamera makeDefault position={[0, 8, 32]} fov={45} />
+      <PerspectiveCamera makeDefault position={[0, 6, 25]} fov={45} />
       <OrbitControls 
         ref={controlsRef}
         enablePan={false} 
-        minDistance={10} 
-        maxDistance={60} 
+        minDistance={12} 
+        maxDistance={50} 
         autoRotate={morphState === TreeMorphState.TREE_SHAPE}
         autoRotateSpeed={0.5}
         makeDefault
@@ -61,6 +67,18 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
 
       <Background />
       <Star morphState={morphState} />
+
+      {/* Solid Tree Trunk as a clear visual anchor */}
+      <mesh ref={trunkRef} position={[0, 4.5, 0]} scale={[1, 0.001, 1]}>
+        <cylinderGeometry args={[0.15, 0.8, 9, 16]} />
+        <meshStandardMaterial 
+          color="#150805" 
+          metalness={0.4} 
+          roughness={0.6} 
+          emissive="#110502"
+          emissiveIntensity={0.2}
+        />
+      </mesh>
 
       <TreeParticles morphState={morphState} />
       <Ornaments morphState={morphState} />
@@ -78,14 +96,13 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
 
       <EffectComposer multisampling={4}>
         <Bloom 
-          intensity={1.2} 
-          luminanceThreshold={0.1} 
+          intensity={1.8} 
+          luminanceThreshold={0.25} 
           luminanceSmoothing={0.9} 
           mipmapBlur 
         />
         <ChromaticAberration offset={new THREE.Vector2(0.0005, 0.0005)} />
-        <Noise opacity={0.02} />
-        <Vignette offset={0.3} darkness={0.9} />
+        <Vignette offset={0.3} darkness={0.8} />
       </EffectComposer>
     </>
   );

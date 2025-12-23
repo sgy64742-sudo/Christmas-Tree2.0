@@ -7,35 +7,61 @@ export const getRandomPointInSphere = (radius: number): [number, number, number]
   const theta = 2 * Math.PI * u;
   const phi = Math.acos(2 * v - 1);
   
-  // Use cube root to ensure uniform distribution inside the sphere volume
   const r = radius * Math.pow(Math.random(), 1 / 3);
   
   const x = r * Math.sin(phi) * Math.cos(theta);
-  const y = r * Math.cos(phi) + 5; // Center Y at middle of the tree height
+  const y = r * Math.cos(phi) + 5; 
   const z = r * Math.sin(phi) * Math.sin(theta);
   
   return [x, y, z];
 };
 
 export const getTreeConePosition = (): [number, number, number] => {
-  const y = Math.random() * TREE_HEIGHT;
-  const normalizedY = y / TREE_HEIGHT;
-  // Standard cone: radius decreases as height increases
-  const radiusAtY = (1 - normalizedY) * TREE_RADIUS;
+  const t = Math.random();
+  const h = t * TREE_HEIGHT;
+  // Use sqrt for uniform distribution inside cone radius
+  const radiusAtY = (1 - t) * TREE_RADIUS * Math.sqrt(Math.random()); 
   const theta = Math.random() * 2 * Math.PI;
   
   const x = radiusAtY * Math.cos(theta);
   const z = radiusAtY * Math.sin(theta);
   
-  return [x, y, z];
+  return [x, h, z];
 };
 
+/**
+ * Tree mode photo distribution: Middle-lower section (y: 1.0 - 6.5)
+ */
+export const getTreePhotoPosition = (index: number, total: number): [number, number, number] => {
+  const yMin = 1.0;
+  const yMax = 6.5;
+  
+  // Spiral logic
+  const angleStep = (Math.PI * 2 * 2.399); // Golden angle for even spacing
+  const angle = index * angleStep;
+  
+  const t = index / total;
+  const y = yMin + t * (yMax - yMin) + (Math.random() - 0.5) * 1.0;
+  
+  const normalizedY = Math.max(0, y / TREE_HEIGHT);
+  const treeBaseRadius = (1 - normalizedY) * TREE_RADIUS;
+  const safeRadius = treeBaseRadius + 5.8; // Far enough to be clearly visible
+  
+  return [
+    safeRadius * Math.cos(angle),
+    y,
+    safeRadius * Math.sin(angle)
+  ];
+};
+
+/**
+ * Scatter mode: Ribbon spiral around the center axis
+ */
 export const getPhotoRibbonPosition = (index: number, total: number): [number, number, number] => {
   const t = index / total;
-  // Create a vertical spiral ribbon around the center axis
-  const angle = t * Math.PI * 4; 
-  const radius = 8 + Math.sin(t * Math.PI) * 2; 
-  const y = (t - 0.5) * 12 + 5; 
+  const radius = 15.0 + Math.sin(t * Math.PI * 2) * 2.0;
+  const angle = t * Math.PI * 5; // More turns for ribbon effect
+  const y = 5 + (t - 0.5) * 12; // Centered around star (y=5)
   
   return [
     radius * Math.cos(angle),

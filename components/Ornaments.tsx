@@ -36,27 +36,21 @@ const Ornaments: React.FC<OrnamentsProps> = ({ morphState }) => {
     const time = state.clock.getElapsedTime();
 
     data.forEach((item, i) => {
-      const targetPos = morphState === TreeMorphState.SCATTERED ? item.scatterPos : item.treePos;
-      const ref = item.type === 'sphere' ? sphereRef : cubeRef;
-      const idx = item.type === 'sphere' ? sphereIdx++ : cubeIdx++;
+      const isSphere = item.type === 'sphere';
+      const ref = isSphere ? sphereRef : cubeRef;
+      const idx = isSphere ? sphereIdx++ : cubeIdx++;
 
-      if (ref.current) {
-        ref.current.getMatrixAt(idx, dummy.matrix);
-        dummy.matrix.decompose(vPos, dummy.quaternion, dummy.scale);
+      if (ref.current && idx < ORNAMENT_COUNT) {
+        const targetPos = morphState === TreeMorphState.SCATTERED ? item.scatterPos : item.treePos;
         
-        // Lerp to target
-        vPos.lerp(new THREE.Vector3(...targetPos), 0.05);
+        // We use a safe check and matrix manipulation
+        dummy.position.set(targetPos[0], targetPos[1], targetPos[2]);
         
-        // Add subtle hover motion
-        vPos.y += Math.sin(time + i) * 0.01;
-        
-        dummy.position.copy(vPos);
-        
-        // Add rotation
+        // Add some floating animation
+        dummy.position.y += Math.sin(time + i) * 0.05;
         dummy.rotation.y += 0.01;
-        dummy.rotation.x += 0.005;
-        
         dummy.updateMatrix();
+        
         ref.current.setMatrixAt(idx, dummy.matrix);
       }
     });
@@ -68,23 +62,23 @@ const Ornaments: React.FC<OrnamentsProps> = ({ morphState }) => {
   return (
     <group>
       <instancedMesh ref={sphereRef} args={[undefined, undefined, ORNAMENT_COUNT]} castShadow>
-        <sphereGeometry args={[0.15, 16, 16]} />
+        <sphereGeometry args={[0.12, 12, 12]} />
         <meshStandardMaterial 
           color={COLORS.PINK} 
-          metalness={1} 
+          metalness={0.9} 
           roughness={0.1} 
           emissive={COLORS.PINK} 
-          emissiveIntensity={0.5} 
+          emissiveIntensity={0.8} 
         />
       </instancedMesh>
       <instancedMesh ref={cubeRef} args={[undefined, undefined, ORNAMENT_COUNT]} castShadow>
-        <boxGeometry args={[0.18, 0.18, 0.18]} />
+        <boxGeometry args={[0.15, 0.15, 0.15]} />
         <meshStandardMaterial 
           color={COLORS.LUXURY_GOLD} 
-          metalness={1} 
+          metalness={0.9} 
           roughness={0.1} 
           emissive={COLORS.GOLD} 
-          emissiveIntensity={0.5} 
+          emissiveIntensity={0.8} 
         />
       </instancedMesh>
     </group>

@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -19,6 +19,7 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
   
   const targetQuaternion = new THREE.Quaternion();
   const rotationMatrix = new THREE.Matrix4();
+  const vTemp = new THREE.Vector3();
 
   useEffect(() => {
     const loader = new THREE.TextureLoader();
@@ -32,57 +33,68 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
   useFrame((state) => {
     if (!groupRef.current) return;
 
-    // 位置平滑过渡
     const targetPos = morphState === TreeMorphState.SCATTERED 
       ? new THREE.Vector3(...scatterPos) 
       : new THREE.Vector3(...treePos);
     
-    groupRef.current.position.lerp(targetPos, 0.05);
+    groupRef.current.position.lerp(targetPos, 0.06);
 
-    // 稳定转向逻辑
     if (morphState === TreeMorphState.SCATTERED) {
-      // 散开时始终正面朝向相机
       rotationMatrix.lookAt(groupRef.current.position, state.camera.position, state.camera.up);
       targetQuaternion.setFromRotationMatrix(rotationMatrix);
     } else {
-      // 树形态时面向外侧
-      const normal = new THREE.Vector3().copy(groupRef.current.position).normalize();
-      normal.y = 0;
-      const lookAtTarget = new THREE.Vector3().addVectors(groupRef.current.position, normal);
-      rotationMatrix.lookAt(groupRef.current.position, lookAtTarget, state.camera.up);
-      targetQuaternion.setFromRotationMatrix(rotationMatrix);
+      const outDirection = new THREE.Vector3(
+        groupRef.current.position.x,
+        0,
+        groupRef.current.position.z
+      ).normalize();
+      
+      vTemp.addVectors(groupRef.current.position, outDirection);
+      vTemp.y += 0.8; 
+
+      rotationMatrix.lookAt(groupRef.current.position, vTemp, state.camera.up);
+      const faceOutQuat = new THREE.Quaternion().setFromRotationMatrix(rotationMatrix);
+      
+      rotationMatrix.lookAt(groupRef.current.position, state.camera.position, state.camera.up);
+      const faceCamQuat = new THREE.Quaternion().setFromRotationMatrix(rotationMatrix);
+      
+      targetQuaternion.copy(faceOutQuat).slerp(faceCamQuat, 0.4);
     }
     
-    // 使用 slerp 平滑旋转，消除抽搐
-    groupRef.current.quaternion.slerp(targetQuaternion, 0.08);
+    groupRef.current.quaternion.slerp(targetQuaternion, 0.1);
+
+    if (morphState === TreeMorphState.SCATTERED) {
+      groupRef.current.position.y += Math.sin(state.clock.elapsedTime * 0.8 + index) * 0.008;
+    }
   });
 
   return (
     <group ref={groupRef} name={`photo-${index}`}>
       <mesh position={[0, 0, -0.01]}>
-        <planeGeometry args={[1.4, 1.7]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.8} />
+        <planeGeometry args={[1.6, 2.0]} />
+        <meshStandardMaterial color="#ffffff" metalness={0.05} roughness={0.9} />
       </mesh>
       
-      <mesh position={[0, 0.15, 0]}>
-        <planeGeometry args={[1.25, 1.25]} />
+      <mesh position={[0, 0.18, 0.005]}>
+        <planeGeometry args={[1.48, 1.48]} />
         {texture ? (
-          <meshBasicMaterial map={texture} transparent={true} />
+          <meshBasicMaterial map={texture} transparent={false} />
         ) : (
-          <meshStandardMaterial color="#eeeeee" />
+          <meshStandardMaterial color="#dddddd" />
         )}
       </mesh>
 
-      <Text
-        position={[0, -0.6, 0.01]}
-        fontSize={0.09}
-        color="#333"
-        anchorX="center"
-        anchorY="middle"
-        // 移除外部字体链接，使用系统字体防止挂起
-      >
-        Arix '24
-      </Text>
+      <Suspense fallback={null}>
+        <Text
+          position={[0, -0.68, 0.01]}
+          fontSize={0.11}
+          color="#222"
+          anchorX="center"
+          anchorY="middle"
+        >
+          Arix Memory
+        </Text>
+      </Suspense>
     </group>
   );
 };
