@@ -73,7 +73,7 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
         makeDefault
       />
 
-      <Background />
+      <Background morphState={morphState} />
       <Star morphState={morphState} />
 
       <TreeParticles morphState={morphState} />
