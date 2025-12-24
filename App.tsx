@@ -102,7 +102,7 @@ const App: React.FC = () => {
       <div className={`absolute top-0 left-0 w-full h-full pointer-events-none flex flex-col justify-between p-10 z-10 transition-opacity duration-1000 ${started ? 'opacity-100' : 'opacity-0'}`}>
         <div className="flex justify-between items-start">
           <div className="flex flex-col">
-             <h1 className="text-5xl font-black italic tracking-tighter bg-gradient-to-r from-pink-500 via-yellow-200 to-pink-500 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent opacity-60 select-none">ARIX</h1>
+             <h1 className="text-5xl font-black italic tracking-tighter bg-gradient-to-r from-pink-500 via-yellow-200 to-pink-500 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent opacity-60 select-none uppercase">Marry Christmas</h1>
           </div>
         </div>
 

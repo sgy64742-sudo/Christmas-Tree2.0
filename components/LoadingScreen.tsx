@@ -64,12 +64,12 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
       <div className="relative flex flex-col items-center max-w-2xl w-full px-6 text-center">
         <div className="w-40 h-40 mb-12 relative flex items-center justify-center">
           <div className="absolute inset-0 bg-pink-500/30 blur-[80px] rounded-full animate-pulse" />
-          <span className="text-8xl relative z-10 cursor-default select-none animate-bounce">🎁</span>
+          <span className="text-8xl relative z-10 cursor-default select-none">🎄</span>
         </div>
         
-        <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-white mb-10 max-w-lg leading-tight uppercase italic">
-          Arix Signature <br/>
-          <span className="bg-gradient-to-r from-pink-400 to-yellow-200 bg-clip-text text-transparent">Christmas 2024</span>
+        <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-10 max-w-xl leading-tight uppercase italic">
+          Every Xmas bell rings <br/>
+          <span className="bg-gradient-to-r from-pink-400 to-yellow-200 bg-clip-text text-transparent">for our unending love.</span>
         </h2>
         
         {!isReady ? (
