@@ -35,7 +35,7 @@ const App: React.FC = () => {
 
   const onExperienceStart = () => {
     setStarted(true);
-    startTracking(); // 核心：由用户直接触发
+    startTracking(); 
     setTimeout(() => {
       setMorphState(TreeMorphState.TREE_SHAPE);
     }, 1500);
@@ -49,8 +49,18 @@ const App: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       setIsUploading(true);
       const url = URL.createObjectURL(e.target.files[0]);
+      
+      // 模拟上传延迟以维持 UI 质感
       setTimeout(() => {
-        setPhotos(prev => [...prev, { id: Date.now().toString(), url }]);
+        const newPhoto = { id: Date.now().toString(), url };
+        setPhotos(prev => {
+          // 如果当前还是初始照片（通过引用判断），则直接替换
+          if (prev === INITIAL_PHOTOS) {
+            return [newPhoto];
+          }
+          // 否则追加到现有照片中
+          return [...prev, newPhoto];
+        });
         setIsUploading(false);
       }, 1000);
     }
@@ -85,12 +95,10 @@ const App: React.FC = () => {
                 {(handData?.gesture === Gesture.NONE || !handData?.gesture) && <Hand size={22} className="text-pink-400/80" />}
               </>
             )}
-            {/* 扫描动画 */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-500/20 to-transparent h-1 w-full top-0 animate-[scan_2s_ease-in-out_infinite]" />
           </div>
         </div>
         
-        {/* 操作指南 */}
         <div className="flex flex-col items-end gap-1 opacity-40">
            <p className="text-[8px] uppercase tracking-widest font-bold">👊 Fist to Assemble</p>
            <p className="text-[8px] uppercase tracking-widest font-bold">🖐 Open to Scatter</p>
