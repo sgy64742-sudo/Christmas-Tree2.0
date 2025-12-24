@@ -18,6 +18,7 @@ const INITIAL_PHOTOS: PhotoData[] = [
 const App: React.FC = () => {
   const [morphState, setMorphState] = useState<TreeMorphState>(TreeMorphState.SCATTERED);
   const [photos, setPhotos] = useState<PhotoData[]>(INITIAL_PHOTOS);
+  const [hasUploaded, setHasUploaded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [handData, setHandData] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -63,8 +64,15 @@ const App: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       setIsUploading(true);
       const url = URL.createObjectURL(e.target.files[0]);
+      
       setTimeout(() => {
-        setPhotos(prev => [...prev, { id: Date.now().toString(), url }]);
+        // If it's the first upload, remove all defaults
+        if (!hasUploaded) {
+          setPhotos([{ id: Date.now().toString(), url }]);
+          setHasUploaded(true);
+        } else {
+          setPhotos(prev => [...prev, { id: Date.now().toString(), url }]);
+        }
         setIsUploading(false);
       }, 800);
     }

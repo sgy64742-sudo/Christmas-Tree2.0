@@ -11,15 +11,18 @@ interface PolaroidProps {
   treePos: [number, number, number];
   morphState: TreeMorphState;
   index: number;
+  isFocused: boolean;
+  isPointing: boolean;
 }
 
-const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphState, index }) => {
+const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphState, index, isFocused, isPointing }) => {
   const groupRef = useRef<THREE.Group>(null);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   
   const targetPos = new THREE.Vector3();
   const targetQuaternion = new THREE.Quaternion();
   const dummy = new THREE.Object3D();
+  const currentScale = useRef(new THREE.Vector3(1, 1, 1));
 
   useEffect(() => {
     const loader = new THREE.TextureLoader();
@@ -33,13 +36,28 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
   useFrame((state) => {
     if (!groupRef.current) return;
 
-    // Smooth position transition
+    // Base target position
     targetPos.set(
       morphState === TreeMorphState.SCATTERED ? scatterPos[0] : treePos[0],
       morphState === TreeMorphState.SCATTERED ? scatterPos[1] : treePos[1],
       morphState === TreeMorphState.SCATTERED ? scatterPos[2] : treePos[2]
     );
-    groupRef.current.position.lerp(targetPos, 0.06);
+
+    // Zoom effect: If focused and pointing, move closer and scale up
+    const zoomMode = isFocused && isPointing;
+    const targetScale = zoomMode ? 2.5 : 1.0;
+    
+    if (zoomMode) {
+      // Move slightly towards camera to prevent clipping and emphasize
+      const toCam = new THREE.Vector3().subVectors(state.camera.position, targetPos).normalize();
+      targetPos.add(toCam.multiplyScalar(2));
+    }
+
+    groupRef.current.position.lerp(targetPos, 0.08);
+    
+    // Scale animation
+    currentScale.current.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+    groupRef.current.scale.copy(currentScale.current);
 
     // Orient towards camera (+Z axis faces target)
     dummy.position.copy(groupRef.current.position);
@@ -48,8 +66,8 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
     
     groupRef.current.quaternion.slerp(targetQuaternion, 0.1);
 
-    // Floating animation in scattered mode
-    if (morphState === TreeMorphState.SCATTERED) {
+    // Floating animation in scattered mode (only if not zooming)
+    if (morphState === TreeMorphState.SCATTERED && !zoomMode) {
       groupRef.current.position.y += Math.sin(state.clock.elapsedTime * 0.8 + index) * 0.008;
     }
   });

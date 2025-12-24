@@ -1,5 +1,5 @@
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Bloom, EffectComposer, Noise, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import { TreeMorphState, PhotoData } from '../types';
@@ -12,15 +12,17 @@ import { getPhotoRibbonPosition, getTreePhotoPosition } from '../utils/math';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { COLORS } from '../constants';
+import { Gesture } from '../hooks/useHandGestures';
 
 interface ExperienceProps {
   morphState: TreeMorphState;
   photos: PhotoData[];
-  handData?: { x: number; y: number; z: number; gesture: string };
+  handData?: { x: number; y: number; z: number; gesture: Gesture };
 }
 
 const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData }) => {
   const controlsRef = useRef<any>(null);
+  const [nearestPhotoId, setNearestPhotoId] = useState<string | null>(null);
 
   const photoPositions = useMemo(() => {
     return photos.map((_, i) => {
@@ -38,7 +40,23 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
     const targetY = morphState === TreeMorphState.TREE_SHAPE ? 4.5 : 5.0;
     controlsRef.current.target.lerp(new THREE.Vector3(0, targetY, 0), 0.05);
 
-    if (handData && handData.gesture === 'OPEN') {
+    // Calculate nearest photo to camera
+    let minDistance = Infinity;
+    let closestId = null;
+
+    state.scene.traverse((obj) => {
+      if (obj.name.startsWith('photo-')) {
+        const distance = obj.position.distanceTo(state.camera.position);
+        if (distance < minDistance) {
+          minDistance = distance;
+          const index = parseInt(obj.name.split('-')[1]);
+          if (photos[index]) closestId = photos[index].id;
+        }
+      }
+    });
+    setNearestPhotoId(closestId);
+
+    if (handData && handData.gesture === Gesture.OPEN) {
       const rotY = (handData.x - 0.5) * Math.PI;
       controlsRef.current.setAzimuthalAngle(THREE.MathUtils.lerp(controlsRef.current.getAzimuthalAngle(), rotY, 0.05));
     }
@@ -52,7 +70,7 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
         enablePan={false} 
         minDistance={12} 
         maxDistance={50} 
-        autoRotate={morphState === TreeMorphState.TREE_SHAPE}
+        autoRotate={morphState === TreeMorphState.TREE_SHAPE && (!handData || handData.gesture !== Gesture.POINT)}
         autoRotateSpeed={0.5}
         makeDefault
       />
@@ -71,6 +89,8 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
           treePos={photoPositions[i].tree}
           morphState={morphState}
           index={i}
+          isFocused={nearestPhotoId === photo.id}
+          isPointing={handData?.gesture === Gesture.POINT}
         />
       ))}
 
