@@ -15,7 +15,6 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
   const [errorCount, setErrorCount] = useState(0);
 
   useEffect(() => {
-    // Poll for the global Mediapipe objects with improved diagnostic checks
     const timer = setInterval(() => {
       const hands = (window as any).Hands || (window as any).hands?.Hands;
       const camera = (window as any).Camera || (window as any).camera?.Camera;
@@ -25,10 +24,8 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
         clearInterval(timer);
       } else {
         setErrorCount(prev => prev + 1);
-        // If it's been about 15 seconds
         if (errorCount > 30) {
-          console.warn('[AI Vision] Mediapipe script detection timeout. Hands:', !!hands, 'Camera:', !!camera);
-          setEngineReady(true); // Allow manual bypass so user isn't stuck forever
+          setEngineReady(true);
           clearInterval(timer);
         }
       }
@@ -37,9 +34,8 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
   }, [errorCount]);
 
   useEffect(() => {
-    // Assets are ready AND engine is either ready or bypassed
     if ((progress >= 100 || !active) && engineReady) {
-      const timer = setTimeout(() => setIsReady(true), 800);
+      const timer = setTimeout(() => setIsReady(true), 1200);
       return () => clearTimeout(timer);
     }
   }, [progress, active, engineReady]);
@@ -50,7 +46,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
     setTimeout(() => {
       const el = document.getElementById('loading-overlay');
       if (el) el.style.display = 'none';
-    }, 1000);
+    }, 1200);
   };
 
   if (!isVisible) return null;
@@ -58,64 +54,103 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
   return (
     <div 
       id="loading-overlay"
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black transition-opacity duration-1000"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050505] transition-opacity duration-1000 overflow-hidden"
       style={{ opacity: isVisible ? 1 : 0 }}
     >
-      <div className="relative flex flex-col items-center max-w-2xl w-full px-6 text-center">
-        <div className="w-40 h-40 mb-12 relative flex items-center justify-center">
-          <div className="absolute inset-0 bg-pink-500/30 blur-[80px] rounded-full animate-pulse" />
-          <span className="text-8xl relative z-10 cursor-default select-none">🎄</span>
+      {/* Intensified Snow Animation - More particles, varying sizes */}
+      <div className="absolute inset-0 pointer-events-none opacity-60">
+        {[...Array(60)].map((_, i) => (
+          <div 
+            key={i}
+            className="absolute bg-white rounded-full animate-snow"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `-${Math.random() * 20}%`,
+              width: `${Math.random() * 4 + 1}px`,
+              height: `${Math.random() * 4 + 1}px`,
+              animationDuration: `${Math.random() * 12 + 8}s`,
+              animationDelay: `${Math.random() * 15}s`,
+              filter: `blur(${Math.random() * 2}px)`,
+              opacity: Math.random() * 0.7 + 0.3
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative flex flex-col items-center max-w-2xl w-full px-6 text-center z-10">
+        {/* Elegant Icon Container */}
+        <div className="w-48 h-48 mb-16 relative flex items-center justify-center">
+          <div className="absolute inset-0 border border-white/5 rounded-full animate-[spin_10s_linear_infinite]" />
+          <div className="absolute inset-4 border border-white/10 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-pink-500/20 to-transparent blur-3xl rounded-full" />
+          <span className="text-7xl relative z-10 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">🎄</span>
         </div>
         
-        <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-10 max-w-xl leading-tight uppercase italic">
-          Every Xmas bell rings <br/>
-          <span className="bg-gradient-to-r from-pink-400 to-yellow-200 bg-clip-text text-transparent">for our unending love.</span>
-        </h2>
+        <div className="space-y-4 mb-14">
+          <h2 className="text-3xl md:text-4xl font-light tracking-[0.2em] text-white leading-relaxed uppercase">
+            Every Xmas bell rings <br/>
+            <span className="font-bold text-white italic tracking-normal">
+              for our unending love.
+            </span>
+          </h2>
+          <div className="h-px w-12 bg-white/20 mx-auto" />
+        </div>
         
         {!isReady ? (
-          <div className="w-72 space-y-6">
-            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="w-80 space-y-8">
+            <div className="relative h-[2px] w-full bg-white/5 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-pink-500 via-yellow-400 to-pink-500 transition-all duration-300"
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-transparent via-pink-400 to-transparent transition-all duration-700 ease-out shadow-[0_0_10px_rgba(244,114,182,0.8)]"
                 style={{ width: `${Math.max(progress, 5)}%` }}
               />
             </div>
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Loader2 size={14} className="animate-spin text-pink-400" />
-                <p className="text-[11px] uppercase tracking-[0.6em] text-white/60 font-black">
-                  {!engineReady ? 'Initializing AI Engine...' : `Illuminating Stars ${Math.round(progress)}%`}
+            
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center gap-3">
+                <Loader2 size={12} className="animate-spin text-white/30" />
+                <p className="text-[10px] uppercase tracking-[0.8em] text-white/40 font-medium">
+                  {!engineReady ? 'Initializing AI Vision' : `Harmonizing Stars ${Math.round(progress)}%`}
                 </p>
               </div>
-              <p className="text-[9px] text-white/20 tracking-[0.3em] uppercase">
-                Preparing interactives
-              </p>
             </div>
           </div>
         ) : (
-          <div className="animate-in fade-in zoom-in duration-1000 flex flex-col items-center gap-8">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 flex flex-col items-center gap-10">
             <button 
               onClick={handleStart}
-              className="group relative flex items-center gap-6 px-16 py-7 bg-white text-black rounded-full font-black uppercase tracking-[0.4em] text-sm hover:scale-105 active:scale-95 transition-all shadow-[0_0_60px_rgba(255,255,255,0.4)]"
+              className="group relative flex items-center gap-8 px-20 py-6 bg-white text-black rounded-full font-bold uppercase tracking-[0.6em] text-xs hover:tracking-[0.8em] hover:bg-pink-50 transition-all duration-500 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
             >
-              <Sparkles size={20} className="text-pink-500 animate-pulse" />
               Open Invitation
-              <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+              <ArrowRight size={18} className="group-hover:translate-x-3 transition-transform duration-500" />
             </button>
             
-            {errorCount > 30 && (
-              <div className="flex items-center gap-2 text-yellow-500/70 text-[10px] uppercase tracking-widest font-bold bg-yellow-500/5 px-4 py-2 rounded-full border border-yellow-500/10">
-                <AlertCircle size={12} />
-                AI Vision may be restricted by network or browser
-              </div>
-            )}
-            
-            <p className="text-[10px] text-white/30 tracking-[0.4em] uppercase font-bold animate-pulse">
-              Click to grant camera access
-            </p>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[10px] text-white/30 tracking-[0.4em] uppercase font-bold animate-pulse">
+                Camera access required for AI
+              </p>
+              {errorCount > 30 && (
+                <p className="text-[9px] text-yellow-500/50 uppercase tracking-widest font-medium">
+                  Vision engine bypass active
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes snow {
+          0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        .animate-snow {
+          animation-name: snow;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+      `}</style>
     </div>
   );
 };
