@@ -49,9 +49,6 @@ const Star: React.FC<StarProps> = ({ morphState }) => {
 
     if (morphState === TreeMorphState.SCATTERED) {
       meshRef.current.position.y += Math.sin(state.clock.elapsedTime * 1.5) * 0.05;
-      meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);
-    } else {
-      meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);
     }
   });
 
@@ -61,11 +58,13 @@ const Star: React.FC<StarProps> = ({ morphState }) => {
       <meshStandardMaterial 
         color={COLORS.LUXURY_GOLD} 
         emissive={COLORS.LUXURY_GOLD} 
-        emissiveIntensity={3.0} 
+        emissiveIntensity={8.0} 
         metalness={1} 
         roughness={0.1} 
       />
-      <pointLight intensity={10} distance={20} color={COLORS.GOLD} />
+      {/* Double glow effect for luxury feel */}
+      <pointLight intensity={30} distance={25} color={COLORS.GOLD} decay={2} />
+      <pointLight intensity={15} distance={10} color={COLORS.PINK} decay={2} />
     </mesh>
   );
 };
