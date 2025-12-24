@@ -21,7 +21,6 @@ interface ExperienceProps {
 
 const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData }) => {
   const controlsRef = useRef<any>(null);
-  const trunkRef = useRef<THREE.Mesh>(null);
 
   const photoPositions = useMemo(() => {
     return photos.map((_, i) => {
@@ -38,13 +37,6 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
     // Smooth camera target
     const targetY = morphState === TreeMorphState.TREE_SHAPE ? 4.5 : 5.0;
     controlsRef.current.target.lerp(new THREE.Vector3(0, targetY, 0), 0.05);
-
-    if (trunkRef.current) {
-      const targetScaleY = morphState === TreeMorphState.TREE_SHAPE ? 1.0 : 0.001;
-      trunkRef.current.scale.y = THREE.MathUtils.lerp(trunkRef.current.scale.y, targetScaleY, 0.05);
-      // Keep it visible once it starts growing
-      trunkRef.current.visible = trunkRef.current.scale.y > 0.005;
-    }
 
     if (handData && handData.gesture === 'OPEN') {
       const rotY = (handData.x - 0.5) * Math.PI;
@@ -67,18 +59,6 @@ const Experience: React.FC<ExperienceProps> = ({ morphState, photos, handData })
 
       <Background />
       <Star morphState={morphState} />
-
-      {/* Solid Tree Trunk as a clear visual anchor */}
-      <mesh ref={trunkRef} position={[0, 4.5, 0]} scale={[1, 0.001, 1]}>
-        <cylinderGeometry args={[0.15, 0.8, 9, 16]} />
-        <meshStandardMaterial 
-          color="#150805" 
-          metalness={0.4} 
-          roughness={0.6} 
-          emissive="#110502"
-          emissiveIntensity={0.2}
-        />
-      </mesh>
 
       <TreeParticles morphState={morphState} />
       <Ornaments morphState={morphState} />

@@ -19,7 +19,6 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
   
   const targetQuaternion = new THREE.Quaternion();
   const rotationMatrix = new THREE.Matrix4();
-  const vTemp = new THREE.Vector3();
 
   useEffect(() => {
     const loader = new THREE.TextureLoader();
@@ -39,27 +38,9 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
     
     groupRef.current.position.lerp(targetPos, 0.06);
 
-    if (morphState === TreeMorphState.SCATTERED) {
-      rotationMatrix.lookAt(groupRef.current.position, state.camera.position, state.camera.up);
-      targetQuaternion.setFromRotationMatrix(rotationMatrix);
-    } else {
-      const outDirection = new THREE.Vector3(
-        groupRef.current.position.x,
-        0,
-        groupRef.current.position.z
-      ).normalize();
-      
-      vTemp.addVectors(groupRef.current.position, outDirection);
-      vTemp.y += 0.8; 
-
-      rotationMatrix.lookAt(groupRef.current.position, vTemp, state.camera.up);
-      const faceOutQuat = new THREE.Quaternion().setFromRotationMatrix(rotationMatrix);
-      
-      rotationMatrix.lookAt(groupRef.current.position, state.camera.position, state.camera.up);
-      const faceCamQuat = new THREE.Quaternion().setFromRotationMatrix(rotationMatrix);
-      
-      targetQuaternion.copy(faceOutQuat).slerp(faceCamQuat, 0.4);
-    }
+    // Face the user directly regardless of the morph state for maximum readability
+    rotationMatrix.lookAt(groupRef.current.position, state.camera.position, state.camera.up);
+    targetQuaternion.setFromRotationMatrix(rotationMatrix);
     
     groupRef.current.quaternion.slerp(targetQuaternion, 0.1);
 

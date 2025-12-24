@@ -61,11 +61,11 @@ const Star: React.FC<StarProps> = ({ morphState }) => {
       <meshStandardMaterial 
         color={COLORS.LUXURY_GOLD} 
         emissive={COLORS.LUXURY_GOLD} 
-        emissiveIntensity={0.8} 
+        emissiveIntensity={3.0} 
         metalness={1} 
         roughness={0.1} 
       />
-      <pointLight intensity={5} distance={15} color={COLORS.GOLD} />
+      <pointLight intensity={10} distance={20} color={COLORS.GOLD} />
     </mesh>
   );
 };
