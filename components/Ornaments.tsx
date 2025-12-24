@@ -43,10 +43,7 @@ const Ornaments: React.FC<OrnamentsProps> = ({ morphState }) => {
       if (ref.current && idx < ORNAMENT_COUNT) {
         const targetPos = morphState === TreeMorphState.SCATTERED ? item.scatterPos : item.treePos;
         
-        // We use a safe check and matrix manipulation
         dummy.position.set(targetPos[0], targetPos[1], targetPos[2]);
-        
-        // Add some floating animation
         dummy.position.y += Math.sin(time + i) * 0.05;
         dummy.rotation.y += 0.01;
         dummy.updateMatrix();
@@ -68,7 +65,7 @@ const Ornaments: React.FC<OrnamentsProps> = ({ morphState }) => {
           metalness={0.9} 
           roughness={0.1} 
           emissive={COLORS.PINK} 
-          emissiveIntensity={0.8} 
+          emissiveIntensity={0.4} 
         />
       </instancedMesh>
       <instancedMesh ref={cubeRef} args={[undefined, undefined, ORNAMENT_COUNT]} castShadow>
@@ -78,7 +75,7 @@ const Ornaments: React.FC<OrnamentsProps> = ({ morphState }) => {
           metalness={0.9} 
           roughness={0.1} 
           emissive={COLORS.GOLD} 
-          emissiveIntensity={0.8} 
+          emissiveIntensity={0.4} 
         />
       </instancedMesh>
     </group>

@@ -70,12 +70,14 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
 
   return (
     <group ref={groupRef} name={`photo-${index}`}>
-      <mesh position={[0, 0, -0.01]}>
-        <planeGeometry args={[1.6, 2.0]} />
+      {/* 3D Frame with Thickness */}
+      <mesh position={[0, 0, -0.025]}>
+        <boxGeometry args={[1.6, 2.0, 0.05]} />
         <meshStandardMaterial color="#ffffff" metalness={0.05} roughness={0.9} />
       </mesh>
       
-      <mesh position={[0, 0.18, 0.005]}>
+      {/* Front Photo Surface */}
+      <mesh position={[0, 0.18, 0.001]}>
         <planeGeometry args={[1.48, 1.48]} />
         {texture ? (
           <meshBasicMaterial map={texture} transparent={false} />
@@ -86,7 +88,7 @@ const Polaroid: React.FC<PolaroidProps> = ({ url, scatterPos, treePos, morphStat
 
       <Suspense fallback={null}>
         <Text
-          position={[0, -0.68, 0.01]}
+          position={[0, -0.68, 0.005]}
           fontSize={0.11}
           color="#222"
           anchorX="center"

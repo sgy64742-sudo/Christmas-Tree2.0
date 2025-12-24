@@ -19,18 +19,18 @@ const TreeParticles: React.FC<TreeParticlesProps> = ({ morphState }) => {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const t = Math.random();
       const h = t * TREE_HEIGHT;
-      // Core particles for density
-      const isCore = Math.random() > 0.6;
-      const spiralTurns = isCore ? 4 : 15;
-      const angle = t * Math.PI * 2 * spiralTurns + (Math.random() * Math.PI); 
       
-      const radiusAtY = (1 - t) * TREE_RADIUS * (isCore ? Math.random() * 0.3 : (0.3 + 0.7 * Math.sqrt(Math.random())));
+      // Defined spiral for the tree shape
+      const spiralTurns = 12;
+      const angle = t * Math.PI * 2 * spiralTurns; 
+      // Add small radial randomness for volume
+      const radiusAtY = (1 - t) * TREE_RADIUS * (0.85 + 0.15 * Math.random());
       
       data.push({
-        scatterPos: getRandomPointInSphere(SCATTER_RADIUS + 10),
+        scatterPos: getRandomPointInSphere(SCATTER_RADIUS + 8),
         treePos: [radiusAtY * Math.cos(angle), h, radiusAtY * Math.sin(angle)],
         color: Math.random() > 0.5 ? COLORS.PINK : COLORS.LUXURY_GOLD,
-        size: Math.random() * 0.15 + 0.05,
+        size: Math.random() * 0.12 + 0.05,
         phase: Math.random() * Math.PI * 2
       });
     }
@@ -43,7 +43,6 @@ const TreeParticles: React.FC<TreeParticlesProps> = ({ morphState }) => {
     const colorObj = new THREE.Color();
 
     particles.forEach((p, i) => {
-      // Start at tree position if we want it to be visible immediately, or scatter
       posArr[i * 3] = p.scatterPos[0];
       posArr[i * 3 + 1] = p.scatterPos[1];
       posArr[i * 3 + 2] = p.scatterPos[2];
@@ -73,16 +72,13 @@ const TreeParticles: React.FC<TreeParticlesProps> = ({ morphState }) => {
       posAttr.array[i * 3 + 1] += (targetY - posAttr.array[i * 3 + 1]) * lerpSpeed;
       posAttr.array[i * 3 + 2] += (targetZ - posAttr.array[i * 3 + 2]) * lerpSpeed;
 
-      // Shimmer effect
-      const shimmer = Math.sin(time * 3 + p.phase) * 0.02;
+      const shimmer = Math.sin(time * 3 + p.phase) * 0.015;
       posAttr.array[i * 3] += shimmer;
       posAttr.array[i * 3 + 1] += shimmer;
       posAttr.array[i * 3 + 2] += shimmer;
     }
     
     posAttr.needsUpdate = true;
-    
-    // Ensure the tree is never culled by the camera
     geometryRef.current.computeBoundingSphere();
     
     if (meshRef.current) {
@@ -108,10 +104,10 @@ const TreeParticles: React.FC<TreeParticlesProps> = ({ morphState }) => {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.16}
+        size={0.14}
         vertexColors
         transparent
-        opacity={1.0}
+        opacity={0.9}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
         sizeAttenuation={true}

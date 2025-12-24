@@ -40,18 +40,14 @@ const Star: React.FC<StarProps> = ({ morphState }) => {
   useFrame((state) => {
     if (!meshRef.current) return;
     
-    // Position: Center (y=5) when scattered, Top of tree (y=10.8) when in tree shape
     const targetY = morphState === TreeMorphState.SCATTERED ? 5 : 10.8;
     meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.06);
     meshRef.current.position.x = 0;
     meshRef.current.position.z = 0;
 
-    // Standard rotation
     meshRef.current.rotation.y += 0.01;
 
-    // If scattered, keep upright posture but with subtle breathing motion
     if (morphState === TreeMorphState.SCATTERED) {
-      // 降低振幅由 0.15 变为 0.05，保持稳定感
       meshRef.current.position.y += Math.sin(state.clock.elapsedTime * 1.5) * 0.05;
       meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);
     } else {
@@ -65,11 +61,11 @@ const Star: React.FC<StarProps> = ({ morphState }) => {
       <meshStandardMaterial 
         color={COLORS.LUXURY_GOLD} 
         emissive={COLORS.LUXURY_GOLD} 
-        emissiveIntensity={1.2} 
+        emissiveIntensity={0.8} 
         metalness={1} 
         roughness={0.1} 
       />
-      <pointLight intensity={10} distance={15} color={COLORS.GOLD} />
+      <pointLight intensity={5} distance={15} color={COLORS.GOLD} />
     </mesh>
   );
 };

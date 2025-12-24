@@ -34,18 +34,18 @@ export const getTreeConePosition = (): [number, number, number] => {
  */
 export const getTreePhotoPosition = (index: number, total: number): [number, number, number] => {
   const yMin = 1.0;
-  const yMax = 6.5;
+  const yMax = 7.0;
   
-  // Spiral logic
-  const angleStep = (Math.PI * 2 * 2.399); // Golden angle for even spacing
+  // Clean spiral logic
+  const angleStep = (Math.PI * 2 * 0.15); 
   const angle = index * angleStep;
   
   const t = index / total;
-  const y = yMin + t * (yMax - yMin) + (Math.random() - 0.5) * 1.0;
+  const y = yMin + t * (yMax - yMin);
   
   const normalizedY = Math.max(0, y / TREE_HEIGHT);
   const treeBaseRadius = (1 - normalizedY) * TREE_RADIUS;
-  const safeRadius = treeBaseRadius + 5.8; // Far enough to be clearly visible
+  const safeRadius = treeBaseRadius + 5.0; // Slightly closer to tree for better cohesion
   
   return [
     safeRadius * Math.cos(angle),
@@ -55,13 +55,13 @@ export const getTreePhotoPosition = (index: number, total: number): [number, num
 };
 
 /**
- * Scatter mode: Ribbon spiral around the center axis
+ * Scatter mode: Reduced ribbon radius for a more intimate feel
  */
 export const getPhotoRibbonPosition = (index: number, total: number): [number, number, number] => {
   const t = index / total;
-  const radius = 15.0 + Math.sin(t * Math.PI * 2) * 2.0;
-  const angle = t * Math.PI * 5; // More turns for ribbon effect
-  const y = 5 + (t - 0.5) * 12; // Centered around star (y=5)
+  const radius = 11.0 + Math.sin(t * Math.PI * 2) * 1.5; // Reduced from 15.0
+  const angle = t * Math.PI * 4.5; 
+  const y = 5 + (t - 0.5) * 10; 
   
   return [
     radius * Math.cos(angle),
