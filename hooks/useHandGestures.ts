@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 export enum Gesture {
   NONE = 'NONE',
@@ -17,65 +17,112 @@ interface HandData {
 
 export const useHandGestures = (onGesture: (data: HandData) => void) => {
   const [isActive, setIsActive] = useState(false);
-  
-  useEffect(() => {
+  const handsRef = useRef<any>(null);
+  const cameraRef = useRef<any>(null);
+
+  const startTracking = useCallback(async () => {
     const videoElement = document.getElementById('input_video') as HTMLVideoElement;
-    if (!videoElement) return;
+    if (!videoElement) {
+      console.error('[AI Vision] Video element not found');
+      return;
+    }
 
-    // @ts-ignore
-    const hands = new window.Hands({
-      locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-    });
+    // Comprehensive global check for Mediapipe
+    // Different versions/loading methods might put it in different places
+    const HandsCtor = (window as any).Hands || (window as any).hands?.Hands;
+    const CameraCtor = (window as any).Camera || (window as any).camera?.Camera;
 
-    hands.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.7,
-    });
+    if (!HandsCtor || !CameraCtor) {
+      console.error('[AI Vision] Mediapipe globals missing.', { 
+        Hands: !!HandsCtor, 
+        Camera: !!CameraCtor,
+        windowKeys: Object.keys(window).filter(k => k.toLowerCase().includes('hands') || k.toLowerCase().includes('camera'))
+      });
+      return;
+    }
 
-    const isFingersRaised = (landmarks: any) => {
-      const fingerTips = [8, 12, 16, 20];
-      const fingerPips = [6, 10, 14, 18];
-      return fingerTips.map((tip, i) => landmarks[tip].y < landmarks[fingerPips[i]].y);
-    };
+    try {
+      console.log('[AI Vision] Initializing engine...');
+      
+      const hands = new HandsCtor({
+        locateFile: (file: string) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        },
+      });
 
-    hands.onResults((results: any) => {
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const landmarks = results.multiHandLandmarks[0];
-        const raised = isFingersRaised(landmarks);
-        const raisedCount = raised.filter(r => r).length;
+      hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.5,
+      });
 
-        let gesture = Gesture.NONE;
-        if (raisedCount === 0) gesture = Gesture.FIST;
-        else if (raisedCount >= 4) gesture = Gesture.OPEN;
-        else if (raisedCount === 1 && raised[0]) gesture = Gesture.POINT;
+      hands.onResults((results: any) => {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+          const landmarks = results.multiHandLandmarks[0];
+          
+          const isFingerRaised = (tipIdx: number, pipIdx: number) => landmarks[tipIdx].y < landmarks[pipIdx].y;
+          
+          const indexRaised = isFingerRaised(8, 6);
+          const middleRaised = isFingerRaised(12, 10);
+          const ringRaised = isFingerRaised(16, 14);
+          const pinkyRaised = isFingerRaised(20, 18);
 
-        onGesture({
-          gesture,
-          x: landmarks[9].x, // Middle finger base
-          y: landmarks[9].y,
-          z: landmarks[9].z,
-        });
-      }
-    });
+          const raisedCount = [indexRaised, middleRaised, ringRaised, pinkyRaised].filter(v => v).length;
 
-    // @ts-ignore
-    const camera = new window.Camera(videoElement, {
-      onFrame: async () => {
-        await hands.send({ image: videoElement });
-      },
-      width: 640,
-      height: 480,
-    });
+          let gesture = Gesture.NONE;
+          
+          if (raisedCount === 0) {
+            gesture = Gesture.FIST;
+          } else if (indexRaised && raisedCount === 1) {
+            gesture = Gesture.POINT;
+          } else if (raisedCount >= 3) {
+            gesture = Gesture.OPEN;
+          }
 
-    camera.start().then(() => setIsActive(true));
+          onGesture({
+            gesture,
+            x: landmarks[9].x,
+            y: landmarks[9].y,
+            z: landmarks[9].z,
+          });
+        } else {
+          onGesture({ gesture: Gesture.NONE, x: 0.5, y: 0.5, z: 0 });
+        }
+      });
 
+      const camera = new CameraCtor(videoElement, {
+        onFrame: async () => {
+          if (handsRef.current) {
+            await handsRef.current.send({ image: videoElement });
+          }
+        },
+        width: 640,
+        height: 480,
+      });
+
+      console.log('[AI Vision] Starting camera...');
+      await camera.start();
+      
+      handsRef.current = hands;
+      cameraRef.current = camera;
+      setIsActive(true);
+      console.log('[AI Vision] Active.');
+    } catch (err) {
+      console.error('[AI Vision] Initialization failed:', err);
+    }
+  }, [onGesture]);
+
+  useEffect(() => {
     return () => {
-      camera.stop();
-      hands.close();
+      if (cameraRef.current) {
+        try { cameraRef.current.stop(); } catch(e) {}
+      }
+      if (handsRef.current) {
+        try { handsRef.current.close(); } catch(e) {}
+      }
     };
   }, []);
 
-  return { isActive };
+  return { isActive, startTracking };
 };

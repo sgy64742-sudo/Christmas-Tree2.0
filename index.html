@@ -6,8 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Arix Signature Christmas Tree</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    
+    <!-- Mediapipe Hand Tracking Dependencies - Using standard latest 0.4 stable -->
+    <script 
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" 
+      crossorigin="anonymous"
+    ></script>
+    <script 
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" 
+      crossorigin="anonymous"
+    ></script>
+
     <style>
       body {
         margin: 0;
@@ -19,20 +28,16 @@
       canvas {
         display: block;
       }
-      .gesture-indicator {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(8px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        z-index: 100;
+      /* Ensure video is technically "visible" for browsers to keep processing the stream */
+      #input_video {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0.01;
+        pointer-events: none;
+        z-index: -1;
       }
     </style>
   <script type="importmap">
@@ -52,8 +57,7 @@
 </head>
   <body>
     <div id="root"></div>
-    <video id="input_video" style="display: none;" playsinline></video>
-    <!-- 必须添加此脚本标签 -->
+    <video id="input_video" autoplay muted playsinline></video>
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>
