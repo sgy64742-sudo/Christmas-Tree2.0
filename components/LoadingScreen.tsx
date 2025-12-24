@@ -57,7 +57,28 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050505] transition-opacity duration-1000 overflow-hidden"
       style={{ opacity: isVisible ? 1 : 0 }}
     >
-      {/* Intensified Snow Animation - More particles, varying sizes */}
+      {/* External Font Import */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+        
+        @keyframes snow {
+          0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        .animate-snow {
+          animation-name: snow;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        .cursive-quote {
+          font-family: 'Great Vibes', cursive;
+          font-weight: 400; /* Consistent weight */
+        }
+      `}</style>
+
+      {/* Intensified Snow Animation */}
       <div className="absolute inset-0 pointer-events-none opacity-60">
         {[...Array(60)].map((_, i) => (
           <div 
@@ -86,14 +107,12 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
           <span className="text-7xl relative z-10 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">🎄</span>
         </div>
         
-        <div className="space-y-4 mb-14">
-          <h2 className="text-3xl md:text-4xl font-light tracking-[0.2em] text-white leading-relaxed uppercase">
+        <div className="space-y-2 mb-14">
+          <h2 className="cursive-quote text-4xl md:text-5xl text-white leading-tight">
             Every Xmas bell rings <br/>
-            <span className="font-bold text-white italic tracking-normal">
-              for our unending love.
-            </span>
+            for our unending love.
           </h2>
-          <div className="h-px w-12 bg-white/20 mx-auto" />
+          <div className="h-px w-12 bg-white/20 mx-auto mt-6" />
         </div>
         
         {!isReady ? (
@@ -137,20 +156,6 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onStart }) => {
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes snow {
-          0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
-        }
-        .animate-snow {
-          animation-name: snow;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-        }
-      `}</style>
     </div>
   );
 };
